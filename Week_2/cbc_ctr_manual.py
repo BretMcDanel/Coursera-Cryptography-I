@@ -70,6 +70,9 @@ def cbc_encrypt(plaintext, iv, key):
     pad = len(plaintext) % AES.block_size
     if pad == 0:
         pad = AES.block_size
+    else:
+        pad = AES.block_size - pad
+        
     plaintext.extend([pad]*pad)
 
     # loop through plaintext blocks
@@ -216,5 +219,6 @@ else:
     print("TEST: CTR encryption - failed")
     print(f"Expected:\n{test_data[1].hex(' ')}")
     print(f"Received:\n{result.hex(' ')}")
+
 
 
