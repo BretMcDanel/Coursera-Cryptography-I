@@ -15,7 +15,7 @@ def xor_bytes(bytes_a, bytes_b):
     """
     return bytes(x ^ y for (x, y) in zip(bytes_a, bytes_b))
 
-def cbc_decrypt(encdata):
+def cbc_decrypt(ciphertext, key):
     """Manually decrypt CBC mode using ECB
 
     Args:
@@ -25,9 +25,9 @@ def cbc_decrypt(encdata):
       bytearray of decrypted data
     """
 
-    key = encdata[0]
-    iv = encdata[1][:AES.block_size]
-    ciphertext = encdata[1][AES.block_size:]
+    #key = encdata[0]
+    iv = ciphertext[:AES.block_size]
+    ciphertext = ciphertext[AES.block_size:]
     cipher = AES.new(key, AES.MODE_ECB)
 
     if len(ciphertext) % AES.block_size != 0:
@@ -48,9 +48,14 @@ def cbc_decrypt(encdata):
 
         block_idx += AES.block_size
 
-    # remove padding
-    padding_bytes = output[len(output)-1]
-    return output[:len(output)-padding_bytes]
+    # Verify padding
+    padding_byte = output[len(output)-1]
+    for pad_idx in range(padding_byte):
+        if int.from_bytes(output[len(output) - pad_idx - 1: len(output) - pad_idx], "big") != padding_byte:
+            # Ideally custom exception class
+            raise RuntimeError("Invalid padding")
+
+    return output[:len(output)-padding_byte]
 
 def cbc_encrypt(plaintext, iv, key):
     """Manually encrypt CBC mode using ECB
@@ -72,7 +77,7 @@ def cbc_encrypt(plaintext, iv, key):
         pad = AES.block_size
     else:
         pad = AES.block_size - pad
-        
+
     plaintext.extend([pad]*pad)
 
     # loop through plaintext blocks
@@ -109,7 +114,7 @@ def increment_bytes(bytestr, inc, size, endian):
     i += inc
     return i.to_bytes(size, endian)
 
-def ctr_decrypt(encdata):
+def ctr_decrypt(ciphertext, key):
     """Manually decrypt CTR mode using ECB
 
     Args:
@@ -119,9 +124,9 @@ def ctr_decrypt(encdata):
       bytearray of decrypted data
     """
 
-    key = encdata[0]
-    iv = encdata[1][:AES.block_size]
-    ciphertext = encdata[1][AES.block_size:]
+    #key = encdata[0]
+    iv = ciphertext[:AES.block_size]
+    ciphertext = ciphertext[AES.block_size:]
 
     # Loop through blocks
     block_idx = 0
@@ -190,15 +195,15 @@ for ct_idx, ct in enumerate(CIPHERTEXTS):
     CIPHERTEXTS[ct_idx] = [bytearray.fromhex(ct[0]), bytearray.fromhex(ct[1])]
 
 
-print(cbc_decrypt(CIPHERTEXTS[0]).decode())
-print(cbc_decrypt(CIPHERTEXTS[1]).decode())
-print(ctr_decrypt(CIPHERTEXTS[2]).decode())
-print(ctr_decrypt(CIPHERTEXTS[3]).decode())
+print(cbc_decrypt(CIPHERTEXTS[0][1], CIPHERTEXTS[0][0]).decode())
+print(cbc_decrypt(CIPHERTEXTS[1][1], CIPHERTEXTS[1][0]).decode())
+print(ctr_decrypt(CIPHERTEXTS[2][1], CIPHERTEXTS[2][0]).decode())
+print(ctr_decrypt(CIPHERTEXTS[3][1], CIPHERTEXTS[3][0]).decode())
 
 test_data = CIPHERTEXTS[0]
 key = test_data[0]
 iv = test_data[1][:AES.block_size]
-result = cbc_encrypt(cbc_decrypt(test_data), iv, key)
+result = cbc_encrypt(cbc_decrypt(test_data[1], key), iv, key)
 
 if result == test_data[1]:
     print("TEST: CBC encryption - passed")
@@ -211,7 +216,7 @@ else:
 test_data = CIPHERTEXTS[2]
 key = test_data[0]
 iv = test_data[1][:AES.block_size]
-result = ctr_encrypt(ctr_decrypt(test_data), iv, key)
+result = ctr_encrypt(ctr_decrypt(test_data[1], key), iv, key)
 
 if result == test_data[1]:
     print("TEST: CTR encryption - passed")
@@ -219,6 +224,3 @@ else:
     print("TEST: CTR encryption - failed")
     print(f"Expected:\n{test_data[1].hex(' ')}")
     print(f"Received:\n{result.hex(' ')}")
-
-
-
