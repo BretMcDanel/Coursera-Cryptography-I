@@ -1,7 +1,7 @@
 # Introduction
 I originally took this course in 2014 and received the __Distinction__ badge for completing these exercises (the badge no longer exists for this course).  A friend recently enrolled in this class prompting me to decide to go through all the material and do the programming exercises again.  These are the optional programming exercises that I completed as a part of this class the second time around.  
 
-**If you take this course you are encouraged to do the exercises yourself.  You will not learn as much if you just use my code.**
+**If you take this course you are encouraged to do the exercises yourself.  You will not learn as much if you just use someone else's code.**
 
 ## Environment
 I am developing in Ubuntu 20.04.3 LTS under WSL2 on Windows 11 using python 3.8.10.  Where needed I used the apt repository to install modules and not pip (eg pycryptodome).  
